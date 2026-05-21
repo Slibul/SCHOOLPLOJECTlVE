@@ -1,0 +1,147 @@
+<%- include('partials/head', { title: '채팅' }) %>
+<link rel="stylesheet" href="/css/chat.css">
+
+<div class="layout">
+    <!-- 탑바 -->
+    <div class="topbar">
+        <div class="brand">SKUL_R</div>
+        <nav class="nav-links">
+            <a href="/dashboard">대시보드</a>
+            <a href="/chat" class="active">채팅</a>
+        </nav>
+        <div class="online-badge">
+            <div class="dot"></div>
+            <span id="myName">-</span>
+            <button onclick="logout()" class="btn btn-secondary" style="padding:.35rem .8rem;font-size:.85rem;margin-left:.5rem">로그아웃</button>
+        </div>
+    </div>
+
+    <div class="chat-body">
+        <!-- 사이드바 -->
+        <aside class="chat-sidebar">
+            <h3>🟢 접속 중</h3>
+            <div id="onlineList">
+                <div class="user-item" style="color:var(--muted);font-size:.85rem">불러오는 중...</div>
+            </div>
+        </aside>
+
+        <!-- 메인 채팅 -->
+        <div class="chat-main">
+            <div class="messages" id="messages">
+                <div class="empty-msg">채팅 기록을 불러오는 중...</div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="msgInput" placeholder="메시지를 입력하세요... (Enter 전송)" maxlength="100">
+                <button id="sendBtn" onclick="sendMsg()">전송</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const session = localStorage.getItem('session');
+const myPID   = Number(localStorage.getItem('PID'));
+let   polling = null;
+let   myName  = localStorage.getItem('myName') || '';
+
+if (!session) location.href = '/login';
+
+// 닉네임 로드 (캐시 없으면 서버에서 가져옴)
+async function loadMyName() {
+    if (myName) { document.getElementById('myName').textContent = myName; return; }
+    try {
+        const res  = await fetch('/user/info', { headers: { 'x-session': session } });
+        const data = await res.json();
+        if (data.success) {
+            myName = data.data.UserName;
+            localStorage.setItem('myName', myName);
+            document.getElementById('myName').textContent = myName;
+        }
+    } catch {}
+}
+loadMyName();
+
+document.getElementById('msgInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+});
+
+// 색상 팔레트 (PID별 아바타 색)
+const colors = ['#6c63ff','#38bdf8','#a78bfa','#34d399','#f59e0b','#f87171','#e879f9'];
+const getColor = pid => colors[pid % colors.length];
+const initials = name => name ? name[0].toUpperCase() : '?';
+
+function renderMessages(chats) {
+    const box = document.getElementById('messages');
+    if (!chats.length) {
+        box.innerHTML = '<div class="empty-msg">아직 채팅이 없습니다. 첫 메시지를 보내보세요!</div>';
+        return;
+    }
+    // 최신이 아래로 (API는 desc 정렬)
+    const sorted = [...chats].reverse();
+    box.innerHTML = sorted.map(c => {
+        const isMine = c.PID === myPID;
+        const t = new Date(c.createdAt).toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' });
+        const color = getColor(c.PID);
+        const name  = c.UserName || `PID${c.PID}`;
+        return `
+        <div class="msg${isMine ? ' mine' : ''}">
+            <div class="avatar" style="background:linear-gradient(135deg,${color},${color}aa)">${initials(name)}</div>
+            <div class="msg-content">
+                <div class="msg-header">
+                    <span class="msg-pid" style="color:${color}">${name}</span>
+                    <span class="msg-time">${t}</span>
+                </div>
+                <div class="msg-text">${escHtml(c.ChatDesc)}</div>
+            </div>
+        </div>`;
+    }).join('');
+    box.scrollTop = box.scrollHeight;
+}
+
+function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+async function loadChats() {
+    try {
+        const res  = await fetch('/chat/recent?limit=80');
+        const data = await res.json();
+        if (data.success) renderMessages(data.chats);
+    } catch {}
+}
+
+async function sendMsg() {
+    const input = document.getElementById('msgInput');
+    const text  = input.value.trim();
+    if (!text) return;
+    input.value = '';
+
+    try {
+        const res  = await fetch('/chat/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-session': session },
+            body: JSON.stringify({ ChatDesc: text })
+        });
+        const data = await res.json();
+        if (!data.success) showToast(data.message, 'error');
+        else loadChats();
+    } catch {
+        showToast('전송 실패', 'error');
+    }
+}
+
+async function logout() {
+    await fetch('/auth/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session })
+    });
+    localStorage.clear();
+    location.href = '/login';
+}
+
+// 5초마다 채팅 갱신
+loadChats();
+polling = setInterval(loadChats, 5000);
+</script>
+<%- include('partials/foot') %>

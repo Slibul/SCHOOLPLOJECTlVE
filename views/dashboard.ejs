@@ -1,0 +1,202 @@
+<%- include('partials/head', { title: '대시보드' }) %>
+<link rel="stylesheet" href="/css/dashboard.css">
+
+<div class="layout">
+    <!-- 사이드바 -->
+    <aside class="sidebar">
+        <div class="brand">SKUL_R</div>
+        <nav>
+            <a class="nav-item active" onclick="showTab('overview')"><span class="icon">📊</span> 개요</a>
+            <a class="nav-item" onclick="showTab('leaderboard')"><span class="icon">🏆</span> 리더보드</a>
+            <a class="nav-item" href="/chat"><span class="icon">💬</span> 채팅</a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar" id="sideAvatar">?</div>
+                <div>
+                    <div class="user-name" id="sideName">로딩 중...</div>
+                    <div class="user-pid" id="sidePID">PID: -</div>
+                </div>
+            </div>
+            <button onclick="logout()" class="btn btn-secondary btn-full logout-btn" style="margin-top:.6rem;font-size:.88rem;padding:.6rem">로그아웃</button>
+        </div>
+    </aside>
+
+    <!-- 메인 -->
+    <main class="main">
+        <!-- 개요 탭 -->
+        <div id="tab-overview">
+            <div class="page-header">
+                <h1>대시보드</h1>
+                <p>내 게임 현황을 한눈에 확인하세요.</p>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card" style="--c:var(--accent)">
+                    <div class="icon">🏆</div>
+                    <div class="value" id="statRank">-</div>
+                    <div class="label">내 순위</div>
+                </div>
+                <div class="stat-card" style="--c:var(--accent2)">
+                    <div class="icon">⭐</div>
+                    <div class="value" id="statScore">-</div>
+                    <div class="label">총 점수</div>
+                </div>
+                <div class="stat-card" style="--c:var(--success)">
+                    <div class="icon">✅</div>
+                    <div class="value" id="statClears">-</div>
+                    <div class="label">클리어 횟수</div>
+                </div>
+                <div class="stat-card" style="--c:var(--accent3)">
+                    <div class="icon">🎮</div>
+                    <div class="value" id="statGames">-</div>
+                    <div class="label">총 판 수</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <h2>계정 정보</h2>
+                </div>
+                <div class="card">
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1.5rem" id="userDetail">
+                        <div style="color:var(--muted);font-size:.9rem">불러오는 중...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 리더보드 탭 -->
+        <div id="tab-leaderboard" style="display:none">
+            <div class="page-header">
+                <h1>🏆 실시간 리더보드</h1>
+                <p>전체 플레이어의 통합 점수 랭킹입니다.</p>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width:60px">순위</th>
+                            <th>플레이어</th>
+                            <th style="text-align:right">총 점수</th>
+                            <th style="text-align:right">처치 수</th>
+                            <th style="text-align:right">클리어</th>
+                            <th style="text-align:right">판수</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboardTable">
+                        <tr><td colspan="6" class="no-data">리더보드를 불러오는 중...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+const session = localStorage.getItem('session');
+const myPID   = Number(localStorage.getItem('PID'));
+const tabs    = ['overview', 'leaderboard'];
+
+if (!session) location.href = '/login';
+
+// ── 탭 전환 ──
+function showTab(name) {
+    tabs.forEach(t => document.getElementById('tab-' + t).style.display = 'none');
+    document.getElementById('tab-' + name).style.display = '';
+    document.querySelectorAll('.nav-item').forEach((el, i) => {
+        el.classList.toggle('active', tabs[i] === name);
+    });
+    if (name === 'leaderboard') loadLeaderboard();
+}
+
+// ── 유저 정보 ──
+async function loadUser() {
+    try {
+        const res  = await fetch('/user/info', { headers: { 'x-session': session } });
+        const data = await res.json();
+        if (!data.success) { logout(); return; }
+        const u = data.data;
+        document.getElementById('sideName').textContent  = u.UserName;
+        document.getElementById('sidePID').textContent   = `PID: ${u.PID}`;
+        document.getElementById('sideAvatar').textContent = u.UserName?.[0]?.toUpperCase() ?? 'U';
+        document.getElementById('userDetail').innerHTML = `
+            <div><div style="font-size:.8rem;color:var(--muted);margin-bottom:.3rem">닉네임</div><div style="font-weight:600">${u.UserName}</div></div>
+            <div><div style="font-size:.8rem;color:var(--muted);margin-bottom:.3rem">PID</div><div style="font-weight:600">${u.PID}</div></div>
+            <div><div style="font-size:.8rem;color:var(--muted);margin-bottom:.3rem">골드</div><div style="font-weight:600;color:var(--accent2)">${u.Money?.toLocaleString() ?? 0}</div></div>
+            <div><div style="font-size:.8rem;color:var(--muted);margin-bottom:.3rem">가입일</div><div style="font-weight:600">${new Date(u.createtime).toLocaleDateString('ko-KR')}</div></div>
+        `;
+    } catch {}
+}
+
+// ── 로그아웃 ──
+async function logout() {
+    await fetch('/auth/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session })
+    }).catch(() => {});
+    localStorage.clear();
+    location.href = '/login';
+}
+
+// ── 리더보드 로드 ──
+async function loadLeaderboard() {
+    try {
+        const res  = await fetch('/record/leaderboard?limit=20');
+        const data = await res.json();
+        const tbody = document.getElementById('leaderboardTable');
+
+        if (!data.success || !data.ranking?.length) {
+            tbody.innerHTML = '<tr><td colspan="6" class="no-data">랭킹 데이터가 없습니다.</td></tr>';
+            return;
+        }
+
+        // 내 순위 / 스탯 카드 업데이트
+        const myRankIdx = data.ranking.findIndex(r => r.PID === myPID);
+        if (myRankIdx !== -1) {
+            const me = data.ranking[myRankIdx];
+            document.getElementById('statRank').textContent  = `${myRankIdx + 1}위`;
+            document.getElementById('statScore').textContent = me.TotalScore?.toLocaleString() ?? 0;
+            document.getElementById('statClears').textContent = me.TotalClears ?? 0;
+            document.getElementById('statGames').textContent  = me.TotalGames  ?? 0;
+        } else {
+            document.getElementById('statRank').textContent   = '순위 없음';
+            document.getElementById('statScore').textContent  = 0;
+            document.getElementById('statClears').textContent = 0;
+            document.getElementById('statGames').textContent  = 0;
+        }
+
+        tbody.innerHTML = data.ranking.map((r, i) => {
+            const isMe = r.PID === myPID;
+            let medal = i + 1;
+            if (i === 0) medal = '🥇';
+            else if (i === 1) medal = '🥈';
+            else if (i === 2) medal = '🥉';
+
+            return `
+                <tr style="${isMe ? 'background:rgba(108,99,255,0.12); outline:1px solid rgba(108,99,255,.3)' : ''}">
+                    <td style="font-weight:800; font-size:1.1rem; text-align:center">${medal}</td>
+                    <td>
+                        <div style="display:flex; align-items:center; gap:10px">
+                            <div class="user-avatar" style="width:30px; height:30px; font-size:.72rem; flex-shrink:0">${r.UserName?.[0]?.toUpperCase() || '?'}</div>
+                            <div style="font-weight:600">${r.UserName} ${isMe ? '<span style="color:var(--accent);font-size:.72rem;font-weight:700">(나)</span>' : ''}</div>
+                        </div>
+                    </td>
+                    <td style="text-align:right; font-weight:700; color:var(--accent2); font-size:1rem">${r.TotalScore?.toLocaleString() ?? 0}</td>
+                    <td style="text-align:right">${r.TotalKills?.toLocaleString() ?? 0}</td>
+                    <td style="text-align:right; color:var(--success); font-weight:600">${r.TotalClears ?? 0}회</td>
+                    <td style="text-align:right; color:var(--muted)">${r.TotalGames ?? 0}판</td>
+                </tr>
+            `;
+        }).join('');
+    } catch (e) {
+        console.error(e);
+        document.getElementById('leaderboardTable').innerHTML = '<tr><td colspan="6" class="no-data">데이터를 불러오지 못했습니다.</td></tr>';
+    }
+}
+
+// ── 초기 로드 ──
+loadUser();
+loadLeaderboard(); // 개요 탭 스탯 카드도 리더보드에서 채움
+</script>
+<%- include('partials/foot') %>

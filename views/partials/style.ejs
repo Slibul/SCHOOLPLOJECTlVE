@@ -1,0 +1,115 @@
+<style>
+:root {
+    --bg: #0f1115;
+    --surface: #1a1d23;
+    --surface2: #242830;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --border: rgba(255, 255, 255, 0.08);
+    --accent: #6366f1;
+    --accent-glow: rgba(99, 102, 241, 0.3);
+    --accent2: #0ea5e9;
+    --accent3: #a855f7;
+    --success: #10b981;
+    --error: #ef4444;
+    --warning: #f59e0b;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* ── 공통 레이아웃 ── */
+.layout { display: flex; flex-direction: column; height: 100vh; }
+
+.topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.8rem 1.6rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    z-index: 100;
+}
+
+.topbar .brand {
+    font-size: 1.3rem; font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
+}
+
+.nav-links { display: flex; gap: 0.5rem; }
+.nav-links a {
+    color: var(--muted); text-decoration: none; font-size: 0.9rem;
+    padding: 0.5rem 1rem; border-radius: var(--radius-sm);
+    transition: var(--transition);
+}
+.nav-links a:hover, .nav-links a.active {
+    color: var(--text); background: var(--surface2);
+}
+
+/* ── 인증/로그인 관련 공통 ── */
+.auth-wrap {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(circle at top right, rgba(99,102,241,0.1), transparent),
+                radial-gradient(circle at bottom left, rgba(14,165,233,0.05), transparent);
+    padding: 1.5rem;
+}
+
+.auth-card {
+    width: 100%; max-width: 440px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2.5rem;
+    box-shadow: var(--shadow);
+}
+
+/* ── 폼 요소 ── */
+.form-group { margin-bottom: 1.2rem; }
+.form-group label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 0.5rem; }
+.form-group input {
+    width: 100%; padding: 0.8rem 1rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text); outline: none;
+    transition: var(--transition);
+}
+.form-group input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+
+/* ── 버튼 ── */
+.btn {
+    width: 100%; padding: 0.8rem;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; border-radius: var(--radius-sm);
+    color: white; font-weight: 600; cursor: pointer;
+    transition: var(--transition);
+}
+.btn:hover { transform: translateY(-2px); filter: brightness(1.1); box-shadow: 0 8px 20px var(--accent-glow); }
+.btn:active { transform: translateY(0); }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ── 뱃지 & 애니메이션 ── */
+.badge {
+    padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600;
+}
+.badge-success { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
+@keyframes pulse {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+.pulse { animation: pulse 2s infinite; }
+</style>

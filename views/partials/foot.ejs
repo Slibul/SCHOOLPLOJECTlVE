@@ -1,0 +1,11 @@
+    <div id="toast"></div>
+    <script>
+        function showToast(msg, type = 'info') {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = 'show ' + type;
+            setTimeout(() => t.className = '', 3000);
+        }
+    </script>
+</body>
+</html>
