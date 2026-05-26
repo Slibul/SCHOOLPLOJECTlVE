@@ -224,7 +224,7 @@ async function getLeaderboard(limit = 20) {
             return MongoGameRecord.aggregate([
       {
         $lookup: {
-          from: "gameuserdatas", // ⚠️ 주의: MongoDB 실제 컬렉션 이름 (보통 소문자 + 복수형)
+          from: "gameuserdatas",
           localField: "PID",
           foreignField: "PID",
           as: "user_info"
@@ -242,7 +242,7 @@ async function getLeaderboard(limit = 20) {
           TotalScore: { $sum: "$Score" },
           TotalKills: { $sum: "$KillCount" },
           TotalGames: { $sum: 1 },
-          TotalClears: { $sum: "$IsCleared" }
+          TotalClears: { $sum: { $cond: ["$IsCleared", 1, 0] } }
         }
       },
       {
