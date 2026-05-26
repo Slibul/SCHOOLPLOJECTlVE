@@ -222,44 +222,43 @@ async function getLeaderboard(limit = 20) {
         async () => {
             // Mongo 폴백: aggregate
             return MongoGameRecord.aggregate([
-    // 1. 대량의 게임 기록을 유저별로 먼저 그룹화
-    { 
-        $group: { 
-            _id: "$PID", 
-            TotalScore:  { $sum: "$Score" },
-            TotalKills:  { $sum: "$KillCount" },
-            TotalGames:  { $sum: 1 }, 
-            TotalClears: { $sum: { $cond: ["$IsCleared", 1, 0] } }
-        }
-    },
-    { $sort: { TotalScore: -1 } },
-    { $limit: limit },
-    { $addFields: { userObjectId: { $toObjectId: "$_id" } } },
-    {
-        $lookup: {
-            from: "gamedata",
-            localField: "userObjectId",
-            foreignField: "PID",
-            as: "gamedatae",
-        },
-    },
-    { 
-        $set: { 
-            gamedatae: { $arrayElemAt: ["$gamedatae", 0] } 
-        } 
-    },
-    {
-        $project: {
-            _id: 0,
-            PID: "$_id",
-            TotalScore: 1,
-            TotalKills: 1,
-            TotalGames: 1,
-            TotalClears: 1,
-            UserName: "$gamedatae.UserName"
-        }
-    },
-    { $sort: { TotalScore: -1 } }
+  {
+    $lookup: {
+      from: "GameUserDatas",
+      localField: "PID",
+      foreignField: "PID",
+      as: "user_info"
+    }
+  },
+  {
+    $unwind: "$user_info"
+  },
+  {
+    $group: {
+      _id: {
+        PID: "$PID",
+        UserName: "$user_info.UserName"
+      },
+      TotalScore: { $sum: "$Score" },
+      TotalKills: { $sum: "$KillCount" },
+      TotalGames: { $sum: 1 },
+      TotalClears: { $sum: "$IsCleared" }
+    }
+  },
+  {
+    $project: {
+      _id: 0,
+      PID: "$_id.PID",
+      UserName: "$_id.UserName",
+      TotalScore: 1,
+      TotalKills: 1,
+      TotalGames: 1,
+      TotalClears: 1
+    }
+  },
+  {
+    $sort: { TotalScore: 1 }
+  }
 ]);
         }
     );
