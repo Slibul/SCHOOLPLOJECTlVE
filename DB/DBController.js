@@ -242,7 +242,7 @@ async function getLeaderboard(limit = 20) {
           TotalScore: { $sum: "$Score" },
           TotalKills: { $sum: "$KillCount" },
           TotalGames: { $sum: 1 },
-          TotalClears: { $sum: { $cond: ["$IsCleared", 1, 0] } }
+          TotalClears: { $sum: { $cond: [ { $eq: ["$IsCleared", true] }, 1, 0 ]  } }
         }
       },
       {
