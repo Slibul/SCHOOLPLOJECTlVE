@@ -27,7 +27,7 @@ async function dualRead(mysqlFn, mongoFn) {
         if (!isEmpty) return r;
         return (await mongoFn().catch(() => null)) ?? r;
     } catch (e) {
-        console.warn("[DualRead] MySQL 실패, Mongo 폴백:", e.message);
+        //console.warn("[DualRead] MySQL 실패, Mongo 폴백:", e.message); // 무한 로그 방지 
         return mongoFn();
     }
 }
