@@ -222,7 +222,7 @@ async function getLeaderboard(limit = 20) {
         async () => {
             // Mongo 폴백: aggregate
             return MongoGameRecord.aggregate([
-                { $addFields: { gamedatas: { $toObjectId: "$game_data" } } },
+                { $addFields: { gamedatas: { $toObjectId: "$PID" } } },
                 {
                     $lookup: {
                       from: "gamedata",
