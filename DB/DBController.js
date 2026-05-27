@@ -236,11 +236,11 @@ async function getLeaderboard(limit = 100) {
               { 
                 $project: { 
                   _id: 0, 
-                  PID: "$user_info.PID", 
+                  PID: "$PID", 
                   UserName: "$user_info.UserName", 
                   TotalScore: "$Score", 
                   TotalKills: "$KillCount", 
-                  TotalGames: $1, 
+                  TotalGames: { $literal: 1 }, 
                   TotalClears: { 
                   $cond: [ { $eq: ["$IsCleared", true] }, 1, 0 ] 
               } 
