@@ -236,8 +236,8 @@ async function getLeaderboard(limit = 100) {
       {
         $project: {
           _id: 0,
-          PID: "$_id.PID",
-          UserName: "$_id.UserName",
+          PID: "$PID",
+          UserName: "$user_info.UserName",
           TotalScore: "$Score",
           TotalKills: "$KillCount",
           TotalGames: 1,
