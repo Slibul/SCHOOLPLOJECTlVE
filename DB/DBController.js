@@ -239,6 +239,68 @@ async function getLeaderboard(limit = 20) {
             PID: "$PID",
             UserName: "$user_info.UserName"
           },
+          TotalScore: "$Score",
+          TotalKills: "$KillCount",
+          TotalGames: { $sum: 1 },
+          TotalClears: { $cond: [ { $eq: ["$IsCleared", true] }, 1, 0 ]  } 
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          PID: "$_id.PID",
+          UserName: "$_id.UserName",
+          TotalScore: 1,
+          TotalKills: 1,
+          TotalGames: 1,
+          TotalClears: 1
+        }
+      },
+      {
+        $sort: { TotalScore: -1 } // 내림차수로수정
+      }
+    ]);
+});
+}
+
+
+// ======================
+// 총합 스코어 리더보드
+// ======================
+
+async function getLeaderboard_total(limit = 20) {
+    return await dualRead(
+        async () => {
+            const [rows] = await pool.query(
+                `SELECT g.PID, u.UserName,
+                        SUM(g.Score) AS TotalScore, SUM(g.KillCount) AS TotalKills,
+                        COUNT(*) AS TotalGames, SUM(g.IsCleared) AS TotalClears
+                 FROM GameRecord g JOIN GameUserData u ON g.PID=u.PID
+                 GROUP BY g.PID, u.UserName ORDER BY TotalScore DESC LIMIT ?`,
+                [limit]
+            );
+            return rows;
+        },
+        async () => {
+            // Mongo 폴백: aggregate
+            return MongoGameRecord.aggregate([
+      {
+        $lookup: {
+          from: "gameuserdatas",
+          localField: "PID",
+          foreignField: "PID",
+          as: "user_info"
+        }
+      },
+      {
+        $unwind: "$user_info"
+      },
+      {
+        $group: {
+          _id: {
+            PID: "$PID",
+            UserName: "$user_info.UserName"
+          },
           TotalScore: { $sum: "$Score" },
           TotalKills: { $sum: "$KillCount" },
           TotalGames: { $sum: 1 },
