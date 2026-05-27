@@ -234,26 +234,14 @@ async function getLeaderboard(limit = 100) {
         $unwind: "$user_info"
       },
       {
-        $group: {
-          _id: {
-            PID: "$PID",
-            UserName: "$user_info.UserName"
-          },
-          TotalScore: "$Score",
-          TotalKills: "$KillCount",
-          TotalGames: { $sum: 1 },
-          TotalClears: { $cond: [ { $eq: ["$IsCleared", true] }, 1, 0 ]  } 
-        }
-      },
-      {
         $project: {
           _id: 0,
           PID: "$_id.PID",
           UserName: "$_id.UserName",
-          TotalScore: 1,
-          TotalKills: 1,
+          TotalScore: "$Score",
+          TotalKills: "$KillCount",
           TotalGames: 1,
-          TotalClears: 1
+          TotalClears: { $cond: [ { $eq: ["$IsCleared", true] }, 1, 0 ]  } 
         }
       },
       {
