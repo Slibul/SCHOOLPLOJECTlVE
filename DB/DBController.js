@@ -206,7 +206,7 @@ async function getUserRecords(PID, limit = 20) {
     );
 }
 
-async function getLeaderboard(limit = 20) {
+async function getLeaderboard(limit = 100) {
     return await dualRead(
         async () => {
             const [rows] = await pool.query(
@@ -465,7 +465,7 @@ async function updatePlayerState(PID, PX, PY, PDM, PHP) {
 module.exports = {
     loginUser, registerUser, getUserData, getUserItems,
     saveSession, getSessionPID, deleteSession,
-    saveGameRecord, getUserRecords, getLeaderboard,
+    saveGameRecord, getUserRecords, getLeaderboard,getLeaderboard_total,
     saveChat, getRecentChats,
     getServerList, createServer,
     joinServer, leaveServer, getServerPlayers,
