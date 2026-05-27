@@ -142,8 +142,10 @@ async function logout() {
 // ── 리더보드 로드 ──
 async function loadLeaderboard() {
     try {
-        const res  = await fetch('/record/leaderboard?limit=20');
+        const res  = await fetch('/record/leaderboard?limit=100');
+        const res2  = await fetch('/record/leaderboard_total?limit=100');
         const data = await res.json();
+        const data2 = await res2.json();
         const tbody = document.getElementById('leaderboardTable');
 
         if (!data.success || !data.ranking?.length) {
@@ -152,9 +154,9 @@ async function loadLeaderboard() {
         }
 
         // 내 순위 / 스탯 카드 업데이트
-        const myRankIdx = data.ranking.findIndex(r => r.PID === myPID);
+        const myRankIdx = data2.ranking.findIndex(r => r.PID === myPID);
         if (myRankIdx !== -1) {
-            const me = data.ranking[myRankIdx];
+            const me = data2.ranking[myRankIdx];
             document.getElementById('statRank').textContent  = `${myRankIdx + 1}위`;
             document.getElementById('statScore').textContent = me.TotalScore?.toLocaleString() ?? 0;
             document.getElementById('statClears').textContent = me.TotalClears ?? 0;
