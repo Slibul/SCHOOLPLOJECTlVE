@@ -147,7 +147,6 @@ async function loadLeaderboard() {
         const data = await res.json();
         const isAwesomeGod = await ourgod.json();
         const tbody = document.getElementById('leaderboardTable');
-        console.log(isAwesomeGod.ranking[0].TotalScore);
         if (!data.success || !data.ranking?.length) {
             tbody.innerHTML = '<tr><td colspan="6" class="no-data">랭킹 데이터가 없습니다.</td></tr>';
             return;
@@ -160,7 +159,7 @@ async function loadLeaderboard() {
             document.getElementById('statRank').textContent  = `${myRankIdx + 1}위`;
             document.getElementById('statScore').textContent = me.TotalScore?.toLocaleString() ?? 0;
             document.getElementById('statClears').textContent = me.TotalClears ?? 0;
-            document.getElementById('statGames').textContent  = me.TotalGames * 100  ?? 0;
+            document.getElementById('statGames').textContent  = me.TotalGames  ?? 0;
         } else {
             document.getElementById('statRank').textContent   = '순위 없음';
             document.getElementById('statScore').textContent  = 0;
