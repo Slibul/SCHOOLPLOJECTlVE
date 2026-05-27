@@ -222,31 +222,29 @@ async function getLeaderboard(limit = 100) {
         async () => {
             // Mongo 폴백: aggregate
             return MongoGameRecord.aggregate([
-      {
-        $lookup: {
-          from: "gameuserdatas",
-          localField: "PID",
-          foreignField: "PID",
-          as: "user_info"
-        }
-      },
-      {
-        $unwind: "$user_info"
-      },
-      {
-        $project: {
-          _id: 0,
-          PID: "$PID",
-          UserName: "$user_info.UserName",
-          TotalScore: "$Score",
-          TotalKills: "$KillCount",
-          TotalGames: 1,
-          TotalClears: { $cond: [ { $eq: ["$IsCleared", true] }, 1, 0 ]  } 
-        }
-      },
-      {
-        $sort: { TotalScore: -1 } // 내림차수로수정
-      }
+              { 
+                $lookup: { 
+                  from: "gameuserdatas", 
+                  localField: "PID", 
+                  foreignField: "PID", 
+                  as: "user_info" 
+                } 
+              },
+              { $unwind: "$user_info" },
+              { 
+                $project: { 
+                  _id: 0, 
+                  PID: "$PID", 
+                  UserName: "$user_info.UserName", 
+                  TotalScore: "$Score", 
+                  TotalKills: "$KillCount", 
+                  TotalGames: { $literal: 1 }, 
+                  TotalClears: { 
+                  $cond: [ { $eq: ["$IsCleared", true] }, 1, 0 ] 
+              } 
+            } 
+          },
+        { $sort: { TotalScore: -1 } }
     ]);
 });
 }
