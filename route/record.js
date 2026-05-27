@@ -57,12 +57,27 @@ router.get("/my", authMiddleware, async (req, res) => {
 
 /**
  * GET /record/leaderboard?limit=20
- * 전체 랭킹 조회 (공개)
+ * 개별 랭킹 조회 (공개)
  */
 router.get("/leaderboard", async (req, res) => {
     const limit = Math.min(parseInt(req.query.limit) || 20, 100);
     try {
         const ranking = await db.getLeaderboard(limit);
+        return res.json({ success: true, ranking });
+    } catch (err) {
+        console.error("[record/leaderboard]", err);
+        return res.status(500).json({ success: false, message: "서버 오류" });
+    }
+});
+
+/**
+ * GET /record/leaderboard?limit=20
+ * 전체 랭킹 조회 (공개)
+ */
+router.get("/leaderboard_total", async (req, res) => {
+    const limit = Math.min(parseInt(req.query.limit) || 20, 100);
+    try {
+        const ranking = await db.getLeaderboard_total(limit);
         return res.json({ success: true, ranking });
     } catch (err) {
         console.error("[record/leaderboard]", err);
