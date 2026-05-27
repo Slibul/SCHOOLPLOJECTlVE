@@ -143,9 +143,9 @@ async function logout() {
 async function loadLeaderboard() {
     try {
         const res  = await fetch('/record/leaderboard?limit=100');
-        const res2  = await fetch('/record/leaderboard_total?limit=100');
+        const ourgod  = await fetch('/record/leaderboard_total?limit=100');
         const data = await res.json();
-        const data2 = await res2.json();
+        const isAwesomeGod = await ourgod.json();
         const tbody = document.getElementById('leaderboardTable');
 
         if (!data.success || !data.ranking?.length) {
@@ -154,13 +154,13 @@ async function loadLeaderboard() {
         }
 
         // 내 순위 / 스탯 카드 업데이트
-        const myRankIdx = data2.ranking.findIndex(r => r.PID === myPID);
+        const myRankIdx = isAwesomeGod.ranking.findIndex(r => r.PID === myPID);
         if (myRankIdx !== -1) {
-            const me = data2.ranking[myRankIdx];
+            const me = isAwesomeGod.ranking[myRankIdx];
             document.getElementById('statRank').textContent  = `${myRankIdx + 1}위`;
             document.getElementById('statScore').textContent = me.TotalScore?.toLocaleString() ?? 0;
             document.getElementById('statClears').textContent = me.TotalClears ?? 0;
-            document.getElementById('statGames').textContent  = me.TotalGames  ?? 0;
+            document.getElementById('statGames').textContent  = me.TotalGames * 100  ?? 0;
         } else {
             document.getElementById('statRank').textContent   = '순위 없음';
             document.getElementById('statScore').textContent  = 0;
