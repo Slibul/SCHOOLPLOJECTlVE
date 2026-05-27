@@ -257,7 +257,7 @@ async function getLeaderboard(limit = 20) {
         }
       },
       {
-        $sort: { TotalScore: 1 } // 오름차순
+        $sort: { TotalScore: -1 } // 내림차수로수정
       }
     ]);
 });
