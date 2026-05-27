@@ -230,7 +230,6 @@ async function getLeaderboard(limit = 100) {
                   as: "user_info" 
                 } 
               },
-              { $unwind: "$user_info" },
               { 
                 $project: { 
                   _id: 0, 
